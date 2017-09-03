@@ -1,0 +1,21 @@
+{
+    "compileOnSave": true,
+    "compilerOptions": {
+        "target":"es5",
+        "module": "system",
+        "outFile":"dist/oh.js",
+        "declaration": true,
+        "experimentalDecorators": true,
+        "lib": [
+            "dom","es6"
+        ]
+    },
+    "files": [
+        "src/Extensions.ts",
+        "src/HttpMethods.ts",
+        "src/ApiFieldTypes.ts",
+        "src/Attributes.ts",
+        "src/HttpClient.ts",        
+        "src/RestClientBuilder.ts"
+    ]
+}
