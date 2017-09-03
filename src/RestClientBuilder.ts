@@ -10,7 +10,22 @@ module Oh {
                 }
             }
             var fields = func.fields.sort((a,b)=>a.index - b.index);
-             
+            var httpCall : string;
+            
+            switch(func.method.httpMethod){
+                case HttpMethods.Get:
+                    httpCall = "getAsync";
+                    break;
+                case HttpMethods.Post:
+                    httpCall = "postAsync";
+                    break;
+                case HttpMethods.Put:
+                    httpCall = "putAsync";
+                    break;
+                case HttpMethods.Delete:
+                    httpCall = "deleteAsync";
+                    break;
+            }
             return new Function(
                 fields.map(x=>x.name).join(","),
                 `var url = "${url}";\r\n` + 
@@ -31,8 +46,8 @@ module Oh {
 
                 `console.log(data);\r\n`+
                 `var httpClient = new Oh.HttpClient();\r\n` +
-                `httpClient.withCredentials = true;\r\n` +
-                ``
+                `httpClient.withCredentials = ${func.method.withCredentials || false};\r\n` +
+                `return httpClient.${httpCall}(url,null,data);`
             );
         }
 
@@ -45,6 +60,7 @@ module Oh {
                     x != 'constructor'
                 ).forEach(x => {
                     if (!(result[x] as Function).method) return;//必須有透過前面Decorators產生的屬性
+                    console.log((result[x] as Function).method);
                     result[x] = this.createMethod(result, result[x] as Function);
                 });
 

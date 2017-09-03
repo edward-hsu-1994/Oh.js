@@ -122,15 +122,16 @@ var Oh;
     var Test = (function () {
         function Test() {
         }
-        Test.prototype.Q = function (a, qq) { };
+        Test.prototype.repos = function (user, page) { };
         return Test;
     }());
     __decorate([
-        apiMethod(),
-        __param(0, apiField({ where: Oh.ApiFieldTypes.Route })), __param(1, apiField())
-    ], Test.prototype, "Q", null);
+        apiMethod({ url: "repos" }),
+        __param(0, apiField({ where: Oh.ApiFieldTypes.Route })),
+        __param(1, apiField())
+    ], Test.prototype, "repos", null);
     Test = __decorate([
-        apiBase("{a}")
+        apiBase("https://api.github.com/users/{user}/")
     ], Test);
     Oh.Test = Test;
 })(Oh || (Oh = {}));
@@ -188,6 +189,8 @@ var Oh;
                                     params.push(key + "=" + encodeURIComponent(data[key]));
                                 url += "?" + params.join("&");
                             }
+                            if (url.substring(url.length - 1) == "?")
+                                url = url.substring(0, url.length - 1);
                             xhr.open(method, url, true, user || _this.user, password || _this.password);
                             //#region 設定Header
                             if (_this.requestHeader)
@@ -344,6 +347,21 @@ var Oh;
                 }
             }
             var fields = func.fields.sort(function (a, b) { return a.index - b.index; });
+            var httpCall;
+            switch (func.method.httpMethod) {
+                case Oh.HttpMethods.Get:
+                    httpCall = "getAsync";
+                    break;
+                case Oh.HttpMethods.Post:
+                    httpCall = "postAsync";
+                    break;
+                case Oh.HttpMethods.Put:
+                    httpCall = "putAsync";
+                    break;
+                case Oh.HttpMethods.Delete:
+                    httpCall = "deleteAsync";
+                    break;
+            }
             return new Function(fields.map(function (x) { return x.name; }).join(","), "var url = \"" + url + "\";\r\n" +
                 ("var method = " + func.method.httpMethod + ";\r\n") +
                 ("var fields = " + JSON.stringify(fields) + ";\r\n") +
@@ -361,8 +379,8 @@ var Oh;
                 "}\r\n" +
                 "console.log(data);\r\n" +
                 "var httpClient = new Oh.HttpClient();\r\n" +
-                "httpClient.withCredentials = true;\r\n" +
-                "");
+                ("httpClient.withCredentials = " + (func.method.withCredentials || false) + ";\r\n") +
+                ("return httpClient." + httpCall + "(url,null,data);"));
         };
         RestClientBuilder.createInstance = function (type) {
             var _this = this;
@@ -374,6 +392,7 @@ var Oh;
             }).forEach(function (x) {
                 if (!result[x].method)
                     return; //必須有透過前面Decorators產生的屬性
+                console.log(result[x].method);
                 result[x] = _this.createMethod(result, result[x]);
             });
             return result;

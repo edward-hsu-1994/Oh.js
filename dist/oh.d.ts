@@ -14,6 +14,7 @@ declare module Oh {
         url: string;
         name: string;
         httpMethod: HttpMethods;
+        withCredentials: boolean;
     }
     class FunctionParameter {
         index: number;
@@ -42,6 +43,7 @@ declare module Oh {
     function apiMethod(config?: {
         url?: string;
         httpMethod?: HttpMethods;
+        withCredentials?: boolean;
     }): (target: any, propertyKey: string, descriptor: PropertyDescriptor) => void;
     function apiField(config?: {
         where?: Oh.ApiFieldTypes;
@@ -51,7 +53,7 @@ declare module Oh {
     class Test {
         newProperty: string;
         hello: string;
-        Q(a: number, qq: string): void;
+        repos(user: number, page: number): void;
     }
 }
 declare module Oh {

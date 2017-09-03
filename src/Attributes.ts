@@ -1,7 +1,8 @@
 module Oh {
     export function apiMethod(config?: {
         url?: string,
-        httpMethod?: HttpMethods
+        httpMethod?: HttpMethods,
+        withCredentials?: boolean
     }) {
         return function (target, propertyKey: string, descriptor: PropertyDescriptor) {
             descriptor.value.method = config || {};
@@ -36,12 +37,14 @@ module Oh {
         }
     }
 
-    @apiBase("{a}")
+    @apiBase("https://api.github.com/users/{user}/")
     export class Test {
         public newProperty: string;
         public hello: string;
 
-        @apiMethod()
-        public Q(@apiField({where : ApiFieldTypes.Route}) a: number, @apiField() qq:string) {}
+        @apiMethod({ url : "repos"})
+        public repos(
+            @apiField({where : ApiFieldTypes.Route}) user: number,
+             @apiField() page:number) {}
     }
 }

@@ -61,6 +61,7 @@ module Oh {
                     for (var key in data) params.push(`${key}=${encodeURIComponent(data[key])}`);
                     url += "?" + params.join("&");
                 }
+                if(url.substring(url.length - 1) == "?")url = url.substring(0,url.length -1);
                 xhr.open(method, url, true, user || this.user, password || this.password);
 
                 //#region 設定Header

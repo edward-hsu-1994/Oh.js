@@ -15,6 +15,7 @@ module Oh{
         public url: string;
         public name:string;
         public httpMethod: HttpMethods;
+        public withCredentials: boolean;
     }
     export class FunctionParameter{
         public index:number;
