@@ -1,12 +1,25 @@
 interface Function{
     getParameters(): string[],
     fields: Oh.FunctionParameter[];
+    method: Oh.FunctionInfo;
+}
+interface Object{
+    baseUrl:string;
+}
+interface String{
+    replaceAll(search:string, replacement:string):string;
 }
 
 module Oh{
+    export class FunctionInfo{
+        public url: string;
+        public name:string;
+        public httpMethod: HttpMethods;
+    }
     export class FunctionParameter{
         public index:number;
-        public name:string;    
+        public name:string;   
+        public field:string;     
         public where:ApiFieldTypes;    
     }
 }
@@ -18,3 +31,7 @@ Function.prototype.getParameters = function(){
     
     return temp.split(',').map(x=>x.trim());
 }
+String.prototype.replaceAll = function(search, replacement) {
+    var target = this;
+    return target.replace(new RegExp(search, 'g'), replacement);
+};

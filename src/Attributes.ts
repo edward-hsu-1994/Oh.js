@@ -1,12 +1,12 @@
 module Oh {
     export function apiMethod(config?: {
         url?: string,
-        resultPath?: string,
         httpMethod?: HttpMethods
     }) {
         return function (target, propertyKey: string, descriptor: PropertyDescriptor) {
             descriptor.value.method = config || {};
             descriptor.value.method.name = propertyKey;
+            if(!(config || {}).httpMethod)descriptor.value.method.httpMethod = HttpMethods.Get;
         }
     }
 
@@ -22,7 +22,8 @@ module Oh {
 
             functionInstance.fields.push({
                 index : parameterIndex,
-                name : (config || {}).name || functionParameters[parameterIndex],
+                name: functionParameters[parameterIndex],
+                field : (config || {}).name || functionParameters[parameterIndex],
                 where : (config || {}).where || ApiFieldTypes.Default
             });     
         }
@@ -35,12 +36,12 @@ module Oh {
         }
     }
 
-    @apiBase("abc")
+    @apiBase("{a}")
     export class Test {
         public newProperty: string;
         public hello: string;
 
         @apiMethod()
-        public Q( @apiField() a: number, @apiField() qq:string) {}
+        public Q(@apiField({where : ApiFieldTypes.Route}) a: number, @apiField() qq:string) {}
     }
 }

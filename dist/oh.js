@@ -44,6 +44,12 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var Oh;
 (function (Oh) {
+    var FunctionInfo = (function () {
+        function FunctionInfo() {
+        }
+        return FunctionInfo;
+    }());
+    Oh.FunctionInfo = FunctionInfo;
     var FunctionParameter = (function () {
         function FunctionParameter() {
         }
@@ -56,6 +62,10 @@ Function.prototype.getParameters = function () {
     temp = temp.substring(1);
     temp = temp.substring(0, temp.length - 1);
     return temp.split(',').map(function (x) { return x.trim(); });
+};
+String.prototype.replaceAll = function (search, replacement) {
+    var target = this;
+    return target.replace(new RegExp(search, 'g'), replacement);
 };
 var Oh;
 (function (Oh) {
@@ -83,6 +93,8 @@ var Oh;
         return function (target, propertyKey, descriptor) {
             descriptor.value.method = config || {};
             descriptor.value.method.name = propertyKey;
+            if (!(config || {}).httpMethod)
+                descriptor.value.method.httpMethod = Oh.HttpMethods.Get;
         };
     }
     Oh.apiMethod = apiMethod;
@@ -93,7 +105,8 @@ var Oh;
             functionInstance.fields = target[propertyKey].fields || [];
             functionInstance.fields.push({
                 index: parameterIndex,
-                name: (config || {}).name || functionParameters[parameterIndex],
+                name: functionParameters[parameterIndex],
+                field: (config || {}).name || functionParameters[parameterIndex],
                 where: (config || {}).where || Oh.ApiFieldTypes.Default
             });
         };
@@ -114,10 +127,10 @@ var Oh;
     }());
     __decorate([
         apiMethod(),
-        __param(0, apiField()), __param(1, apiField())
+        __param(0, apiField({ where: Oh.ApiFieldTypes.Route })), __param(1, apiField())
     ], Test.prototype, "Q", null);
     Test = __decorate([
-        apiBase("abc")
+        apiBase("{a}")
     ], Test);
     Oh.Test = Test;
 })(Oh || (Oh = {}));
@@ -320,14 +333,37 @@ var Oh;
     var RestClientBuilder = (function () {
         function RestClientBuilder() {
         }
-        /*private static createType<T>(type : new()=>T) :new()=>T{
-            var object = new type();
-            
-            
-
-            return object;
-        }
-        */
+        RestClientBuilder.createMethod = function (type, func) {
+            var url = type.baseUrl || "";
+            if (func.method.url) {
+                if (/^https?:/g.test(func.method.url)) {
+                    url = func.method.url;
+                }
+                else {
+                    url += func.method.url;
+                }
+            }
+            var fields = func.fields.sort(function (a, b) { return a.index - b.index; });
+            return new Function(fields.map(function (x) { return x.name; }).join(","), "var url = \"" + url + "\";\r\n" +
+                ("var method = " + func.method.httpMethod + ";\r\n") +
+                ("var fields = " + JSON.stringify(fields) + ";\r\n") +
+                "var route = fields.filter(x=>x.where == Oh.ApiFieldTypes.Route);\r\n" +
+                "for(var i = 0; i < route.length ; i++){\r\n" +
+                "url = url.replaceAll(\"\\{\" + route[i].field + \"\\}\", eval(route[i].name));" +
+                "}\r\n" +
+                "var query = fields.filter(x=>x.where == Oh.ApiFieldTypes.Query).map(x=>x.field + \"=\" + encodeURIComponent(eval(x.name))).join(\"&\");\r\n" +
+                "if(url.indexOf(\"?\") == -1)url += \"?\";\r\n" +
+                "url += query;" +
+                "var body = fields.filter(x=>x.where == Oh.ApiFieldTypes.Body);\r\n" +
+                "var data = {};\r\n" +
+                "for(var i = 0; i < body.length ; i++){\r\n" +
+                "data[body.field] = eval(body[i].name);" +
+                "}\r\n" +
+                "console.log(data);\r\n" +
+                "var httpClient = new Oh.HttpClient();\r\n" +
+                "httpClient.withCredentials = true;\r\n" +
+                "");
+        };
         RestClientBuilder.createInstance = function (type) {
             var _this = this;
             var result = new type();
@@ -336,9 +372,9 @@ var Oh;
                 return type.prototype[x] instanceof Function &&
                     x != 'constructor';
             }).forEach(function (x) {
-                if (!_this[x].attributes)
+                if (!result[x].method)
                     return; //必須有透過前面Decorators產生的屬性
-                console.log(_this);
+                result[x] = _this.createMethod(result, result[x]);
             });
             return result;
         };

@@ -1,14 +1,42 @@
-module Oh{
-    export class RestClientBuilder{
-        /*private static createType<T>(type : new()=>T) :new()=>T{
-            var object = new type();
-            
-            
+module Oh {
+    export class RestClientBuilder {
+        private static createMethod<T>(type: T, func: Function): Function {
+            let url = type.baseUrl || "";
+            if (func.method.url) {
+                if (/^https?:/g.test(func.method.url)) {
+                    url = func.method.url;
+                } else {
+                    url += func.method.url;
+                }
+            }
+            var fields = func.fields.sort((a,b)=>a.index - b.index);
+             
+            return new Function(
+                fields.map(x=>x.name).join(","),
+                `var url = "${url}";\r\n` + 
+                `var method = ${func.method.httpMethod};\r\n`+
+                `var fields = ${JSON.stringify(fields)};\r\n` + 
+                `var route = fields.filter(x=>x.where == Oh.ApiFieldTypes.Route);\r\n`+
+                `for(var i = 0; i < route.length ; i++){\r\n`+
+                    `url = url.replaceAll("\\{" + route[i].field + "\\}", eval(route[i].name));`+//url route覆蓋
+                `}\r\n` +
+                `var query = fields.filter(x=>x.where == Oh.ApiFieldTypes.Query).map(x=>x.field + "=" + encodeURIComponent(eval(x.name))).join("&");\r\n`+
+                `if(url.indexOf("?") == -1)url += "?";\r\n`+
+                `url += query;`+//url route覆蓋
+                `var body = fields.filter(x=>x.where == Oh.ApiFieldTypes.Body);\r\n`+
+                `var data = {};\r\n` +
+                `for(var i = 0; i < body.length ; i++){\r\n`+
+                    `data[body.field] = eval(body[i].name);`+//url route覆蓋
+                `}\r\n` +
 
-            return object;
+                `console.log(data);\r\n`+
+                `var httpClient = new Oh.HttpClient();\r\n` +
+                `httpClient.withCredentials = true;\r\n` +
+                ``
+            );
         }
-        */
-        public static createInstance<T>(type: new()=>T): T {
+
+        public static createInstance<T>(type: new () => T): T {
             let result = new type();
 
             Reflect.ownKeys(type.prototype)//透過反射取得此類別成員
@@ -16,8 +44,8 @@ module Oh{
                     type.prototype[x] instanceof Function &&
                     x != 'constructor'
                 ).forEach(x => {
-                    if (!this[x].attributes) return;//必須有透過前面Decorators產生的屬性
-                    console.log(this);
+                    if (!(result[x] as Function).method) return;//必須有透過前面Decorators產生的屬性
+                    result[x] = this.createMethod(result, result[x] as Function);
                 });
 
             return result;

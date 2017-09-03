@@ -1,11 +1,24 @@
 interface Function {
     getParameters(): string[];
     fields: Oh.FunctionParameter[];
+    method: Oh.FunctionInfo;
+}
+interface Object {
+    baseUrl: string;
+}
+interface String {
+    replaceAll(search: string, replacement: string): string;
 }
 declare module Oh {
+    class FunctionInfo {
+        url: string;
+        name: string;
+        httpMethod: HttpMethods;
+    }
     class FunctionParameter {
         index: number;
         name: string;
+        field: string;
         where: ApiFieldTypes;
     }
 }
@@ -28,7 +41,6 @@ declare module Oh {
 declare module Oh {
     function apiMethod(config?: {
         url?: string;
-        resultPath?: string;
         httpMethod?: HttpMethods;
     }): (target: any, propertyKey: string, descriptor: PropertyDescriptor) => void;
     function apiField(config?: {
@@ -146,6 +158,7 @@ declare module Oh {
 }
 declare module Oh {
     class RestClientBuilder {
+        private static createMethod<T>(type, func);
         static createInstance<T>(type: new () => T): T;
     }
 }
