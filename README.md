@@ -14,7 +14,7 @@ class Test {
         @apiField() page:number) {}
 }
 
-var githubApi = Oh.RestClientBuilder.createInstance(Oh.Test);
+var githubApi = Oh.RestClientBuilder.createInstance(Test);
 githubApi.repos("XuPeiYao",1).then((x) => {
   console.log(x.toJSON());
 });
